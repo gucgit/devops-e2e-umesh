@@ -153,7 +153,7 @@ resource "azurerm_virtual_machine" "test" {
   os_profile {
     computer_name = "dellemcdemovm"
     admin_username = "testadmin"
-    admin_password = "Password1234!"
+    admin_password = var.admin_password
   }
 
   os_profile_linux_config {
@@ -172,4 +172,8 @@ output "public_ip_address" {
 resource "azurerm_network_interface_security_group_association" "test" {
   network_interface_id     = azurerm_network_interface.test[0].id
   network_security_group_id = azurerm_network_security_group.test.id
+}
+
+variable "admin_password" {
+  sensitive = true
 }
