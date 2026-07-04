@@ -36,23 +36,19 @@ pipeline {
         stage('Deploy') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'azure-vm-ssh', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
-                    sh '''
-                        sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no target/${JAR_NAME} $SSH_USER@$VM_IP:/tmp/${JAR_NAME}
-                        sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo pkill -f ${JAR_NAME} || true"
-                        sleep 2
-                        sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo mv /tmp/${JAR_NAME} /opt/app/${JAR_NAME}"
-                        sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo bash -c 'nohup java -jar /opt/app/${JAR_NAME} > /opt/app/app.log 2>&1 & disown'"
-                    '''
+                    sh 'sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no target/${JAR_NAME} $SSH_USER@$VM_IP:/tmp/${JAR_NAME}'
+                    sh 'sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo pkill -f ${JAR_NAME} || true"'
+                    sh 'sleep 3'
+                    sh 'sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo mv /tmp/${JAR_NAME} /opt/app/${JAR_NAME}"'
+                    sh 'sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo bash -c \'nohup java -jar /opt/app/${JAR_NAME} > /opt/app/app.log 2>&1 & disown\'"'
                 }
             }
         }
 
         stage('Health Check') {
             steps {
-                sh '''
-                    sleep 10
-                    curl -f "http://${VM_IP}:8080/sayhi?name=Jenkins" || exit 1
-                '''
+                sh 'sleep 10'
+                sh 'curl -f "http://${VM_IP}:8080/sayhi?name=Jenkins"'
             }
         }
     }
