@@ -1,6 +1,6 @@
 resource "azurerm_resource_group" "test" {
   name = "acctestrg"
-  location = "West US 2"
+  location = "South India"
 }
 
 resource "azurerm_virtual_network" "test" {
@@ -15,7 +15,7 @@ resource "azurerm_subnet" "test" {
   name = "acctsub"
   resource_group_name = "${azurerm_resource_group.test.name}"
   virtual_network_name = "${azurerm_virtual_network.test.name}"
-  address_prefix = "10.0.2.0/24"
+  address_prefixes = ["10.0.2.0/24"]
 }
 
 resource "azurerm_public_ip" "test" {
@@ -23,9 +23,11 @@ resource "azurerm_public_ip" "test" {
   location = "${azurerm_resource_group.test.location}"
   resource_group_name = "${azurerm_resource_group.test.name}"
   allocation_method       = "Static"
+  sku                     = "Standard"
+  availability_zone       = "No-Zone"
   idle_timeout_in_minutes = 30
   domain_name_label="dellemcappdemo"
-  tags {
+  tags = {
     environment = "staging"
   }
 }
@@ -34,7 +36,7 @@ resource "azurerm_network_security_group" "test" {
   name                = "acceptanceTestSecurityGroup1"
   location            = "${azurerm_resource_group.test.location}"
   resource_group_name = "${azurerm_resource_group.test.name}"
-  tags {
+  tags = {
     environment = "staging"
   }
 }
@@ -75,7 +77,6 @@ resource "azurerm_network_interface" "test" {
   name = "acctni${count.index}"
   location = "${azurerm_resource_group.test.location}"
   resource_group_name = "${azurerm_resource_group.test.name}"
-  network_security_group_id = "${azurerm_network_security_group.test.id}"
   ip_configuration {
     name = "testConfiguration"
     subnet_id = "${azurerm_subnet.test.id}"
@@ -109,8 +110,8 @@ resource "azurerm_virtual_machine" "test" {
   location = "${azurerm_resource_group.test.location}"
   availability_set_id = "${azurerm_availability_set.avset.id}"
   resource_group_name = "${azurerm_resource_group.test.name}"
-  network_interface_ids = ["${azurerm_network_interface.test.id}"]
-  vm_size = "Standard_DS1_v2"
+  network_interface_ids = [azurerm_network_interface.test[0].id]
+  vm_size = "Standard_B2s_v2"
 
   # Uncomment this line to delete the OS disk automatically when deleting the VM
   # delete_os_disk_on_termination = true
@@ -159,7 +160,7 @@ resource "azurerm_virtual_machine" "test" {
     disable_password_authentication = false
   }
 
-  tags {
+  tags = {
     environment = "staging"
   }
 }
@@ -167,4 +168,8 @@ resource "azurerm_virtual_machine" "test" {
 
 output "public_ip_address" {
   value = "${azurerm_public_ip.test.ip_address}"
+}
+resource "azurerm_network_interface_security_group_association" "test" {
+  network_interface_id     = azurerm_network_interface.test[0].id
+  network_security_group_id = azurerm_network_security_group.test.id
 }
