@@ -37,10 +37,10 @@ pipeline {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'azure-vm-ssh', usernameVariable: 'SSH_USER', passwordVariable: 'SSH_PASS')]) {
                     sh 'sshpass -p "$SSH_PASS" scp -o StrictHostKeyChecking=no target/${JAR_NAME} $SSH_USER@$VM_IP:/tmp/${JAR_NAME}'
-                    sh 'sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo pkill -f ${JAR_NAME} || true"'
+                    sh '''sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo pkill -f '\''[d]evops-demo-0.3.0.jar'\'' || true"'''
                     sh 'sleep 3'
                     sh 'sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo mv /tmp/${JAR_NAME} /opt/app/${JAR_NAME}"'
-                    sh 'sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo bash -c \'nohup java -jar /opt/app/${JAR_NAME} > /opt/app/app.log 2>&1 & disown\'"'
+                    sh '''sshpass -p "$SSH_PASS" ssh -o StrictHostKeyChecking=no $SSH_USER@$VM_IP "sudo bash -c '\''nohup java -jar /opt/app/${JAR_NAME} > /opt/app/app.log 2>&1 & disown'\''"'''
                 }
             }
         }
